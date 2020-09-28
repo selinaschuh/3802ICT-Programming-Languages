@@ -2,6 +2,7 @@
 module JSON where
 
     import Data.List
+    import Data.Char
     import System.IO
 
     import ABR.Util.Pos
@@ -17,15 +18,15 @@ module JSON where
     -- type Member = (Key, Value)
     -- type Object = [Member]
 
-    type JSONBool = Bool
-    type JSONNumber = Double
-    type JSONString = String
+    -- type JSONBool = Bool
+    -- type JSONString = String
+    -- type JSONNumber = Double
 
-    type JSONArray = [JSONValue]
-    type JSONObject = [(String, JSONValue)]
+    -- type JSONArray = [JSONValue]
+    -- type JSONObject = [(String, JSONValue)]
 
-    data JSONValue = JSONBool | JSONNumber | JSONString | JSONArray | JSONObject
-                     deriving (Show, Eq)
+    -- data JSONValue = JSONBool | JSONNumber | JSONString | JSONArray | JSONObject
+    --                  deriving (Show, Eq)
 
     data JsValue
         = JsNull
@@ -53,11 +54,41 @@ module JSON where
     -- lexer for JSONString
     jsonStringL :: Lexer
     jsonStringL = stringL %> "JSONString"
-            
+
+    jsonNumberL :: Lexer
+    jsonNumberL = floatL %> "JSONNumber"
+
+    jsonValueL :: Lexer
+    jsonValueL = jsonStringL <|> jsonBoolL %> "JSONValue"
+
+    -- an array starts with '[' followed by 0 to more values followed by ']'
+    jsonArrayL :: Lexer 
+    jsonArrayL = literalL '[' <&&> soft (optional jsonStringL) <&&>
+                 literalL ']' %> "JSONArray"
 
     inputL :: Lexer
     inputL = dropWhite $ nofail $ total $ listL 
-             [whitespaceL, symbolL, floatL, jsonBoolL, jsonStringL]
+             [whitespaceL, jsonBoolL, jsonStringL, jsonNumberL, symbolL]
+
+
+    jsonBoolP :: Parser JsValue
+    jsonBoolP = tagP "JSONBool" @> (\ (_, bool, _) -> 
+                                        case bool of 
+                                            "True" -> JsBool True
+                                            "False" -> JsBool False)
+
+    jsonP :: Parser JsValue
+    jsonP = nofail $ total $ jsonBoolP
+
+    -- jsonP :: Parser JSONBool
+    -- jsonP = nofail $ total jsonBoolP
+
+    error :: Pos -> Msg -> IO ()
+    error (line,col) msg = do
+            putStrLn $ "Error on line " ++ show line ++ 
+                       " and column " ++ show col ++ 
+                       " : " ++ msg
+
 
     main :: IO ()
     main = do
@@ -65,17 +96,20 @@ module JSON where
         putStr ">> "
         hFlush stdout
         input <- getLine
-        
-        let error :: Pos -> Msg -> IO ()
-            error (line,col) msg = do
-            putStrLn $ "Error on line " ++ show line ++ 
-                       " and column " ++ show col ++ 
-                       " : " ++ msg
-            main
+    
         let cps = preLex input
         putStrLn $ "Pairs: " ++ show cps
 
         case inputL cps of
-            Error pos msg -> error pos msg
+            Error pos msg -> JSON.error pos msg
             OK(tlps, _) -> do
                 putStrLn $ "Lexemes: " ++ show tlps
+
+                case jsonP tlps of 
+                    Error pos msg -> JSON.error pos msg
+                    OK(json, _) -> do
+                        putStrLn $ "Result :" ++ show json
+                main
+
+
+
