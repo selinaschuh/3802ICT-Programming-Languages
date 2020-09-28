@@ -77,11 +77,24 @@ module JSON where
                                             "True" -> JsBool True
                                             "False" -> JsBool False)
 
-    jsonP :: Parser JsValue
-    jsonP = nofail $ total $ jsonBoolP
+    -- need to deal with negative numbers and not starting with 0
+    jsonNumberP :: Parser JsValue
+    jsonNumberP = tagP "JSONNumber" @> (\ (_, n, _) -> JsNumber (read n))
 
-    -- jsonP :: Parser JSONBool
-    -- jsonP = nofail $ total jsonBoolP
+    jsonStringP :: Parser JsValue
+    jsonStringP = tagP "JSONString" @> (\ (_, s, _) -> JsString s)
+
+    jsonValueP :: Parser JsValue
+    jsonValueP = jsonBoolP <|> jsonStringP <|> jsonNumberP
+
+    jsonArrayP :: Parser JsValue
+    jsonArrayP = literalP "'['" "[" &>
+                    (optional jsonValueP <&> many (literalP "','" "," &> jsonValueP) @> (\ (l, l') -> l ++ l'))
+                <& literalP "']'" "]" @> JsArray 
+
+    jsonP :: Parser JsValue
+    jsonP = nofail $ total $ jsonArrayP
+
 
     error :: Pos -> Msg -> IO ()
     error (line,col) msg = do
