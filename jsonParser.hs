@@ -75,12 +75,12 @@ module JSON where
     jsStringP = tagP "string" @> (\ (_, s, _) -> JSString s)
 
     jsArrayP :: Parser JSValue
-    jsArrayP = literalP "'['" "[" &>
-                    (optional jsValueP <&> many (literalP "','" "," &> jsValueP) @> (\ (v, vs) -> v ++ vs)) -- join the two lists of values
-                <& literalP "']'" "]" @> JSArray
+    jsArrayP = tagP "'['" &>
+                    (optional jsValueP <&> many (tagP "','" &> jsValueP) @> (\ (v, vs) -> v ++ vs)) -- join the two lists of values
+                <& tagP "']'" @> JSArray
 
     jsMemberP :: Parser JSMember
-    jsMemberP = (tagP "string" <&> literalP "':'" ":" &> jsValueP)  @> (\((_,name,_), val) -> JSMember name val)
+    jsMemberP = (tagP "string" <&> tagP "':'" &> jsValueP)  @> (\((_,name,_), val) -> JSMember name val)
 
     -- jsObejectP :: Parser JSValue
     jsObejectP = (tagP "'{'" &>                                                  -- {
@@ -90,9 +90,9 @@ module JSON where
 
 
     jsValueP :: Parser JSValue
-    jsValueP = jsBoolP <|> jsNumberP <|> jsStringP <|> jsArrayP
+    jsValueP = jsBoolP <|> jsNumberP <|> jsStringP <|> jsArrayP <|> jsObejectP
 
-    jsonP = nofail $ total $ jsObejectP 
+    jsonP = nofail $ total $ jsValueP 
 
 
     -- custom error reporting function
