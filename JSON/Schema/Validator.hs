@@ -47,12 +47,24 @@ module JSON.Schema.Validator (
     stringV (JSString s) = valid
     stringV _ = invalid
 
+    -- validates array
+    arrayV :: JSValue -> Bool
+    arrayV (JSArray _) = valid
+    arrayV _ = invalid
+
+    arrayV' :: JSValue -> JSValue ->  Bool
+    arrayV' object (JSArray []) = valid
+    arrayV' object (JSArray (e:elems)) = validate e object && arrayV' object (JSArray elems)
+    arrayV' _ _ = invalid
+
     validate :: JSValue -> JSValue -> Bool
     validate _ (JSObject []) = valid -- empty schema matches anything
     validate json (JSObject [JSMember "\"type\"" (JSString "\"bool\"")]) = boolV json
     validate json (JSObject [JSMember "\"type\"" (JSString "\"int\"")]) = intV json
     validate json (JSObject [JSMember "\"type\"" (JSString "\"float\"")]) = floatV json
     validate json (JSObject [JSMember "\"type\"" (JSString "\"string\"")]) = stringV json
+    validate json (JSObject [JSMember "\"type\"" (JSString "\"array\"")]) = arrayV json
+    validate json (JSObject [JSMember "\"type\"" (JSString "\"array\""), JSMember "\"elements\"" object]) = arrayV' object json
     validate _ _ = invalid
 
 
