@@ -9,15 +9,27 @@ module JSON where
     import ABR.Parser.Lexers
 
     type JsNumber = Double
-    type JsBool = Bool
+    --type JsBool = Bool
     type JsString = String
     type JsMemberName = String
 
+
+    
+
     data JSMember = JSMember JsMemberName JSValue deriving (Show)
+
+    -- data JSValue 
+    --     = JSNumber JsNumber
+    --     | JSBool JsBool 
+    --     | JSString JsString
+    --     | JSArray [JSValue]
+    --     | JSObject [JSMember]
+    --     deriving (Show)
 
     data JSValue 
         = JSNumber JsNumber
-        | JSBool JsBool 
+        | JSTrue
+        | JSFalse 
         | JSString JsString
         | JSArray [JSValue]
         | JSObject [JSMember]
@@ -65,8 +77,8 @@ module JSON where
     jsBoolP :: Parser JSValue
     jsBoolP = tagP "bool" @> (\ (_, bool, _) -> 
                                  case bool of 
-                                    "true" -> JSBool True
-                                    "false" -> JSBool False)
+                                    "true" -> JSTrue
+                                    "false" -> JSFalse)
 
     jsNumberP :: Parser JSValue
     jsNumberP = tagP "number" @> (\ (_, n, _) -> JSNumber (read n))
