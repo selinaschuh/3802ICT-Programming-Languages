@@ -3,7 +3,7 @@ module JSON.Parser (
     jsonP, jsValueP, jsObejectP, jsMemberP, jsArrayP,
     jsStringP, jsNumberP, jsBoolP, numberL, digitL, 
     digitNotZeroL, boolL, symbolL, inputL, JSON.Parser.error,
-    JSMember, JSValue(JSNumber, JSTrue, JSFalse, JSString, JSArray, JSObject)
+    JSMember (JSMember), JSValue(JSNumber, JSTrue, JSFalse, JSString, JSArray, JSObject)
 
 ) where
 
