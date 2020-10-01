@@ -99,6 +99,7 @@ module JSON.Schema.Validator where
     jsValueP :: Parser JSValue
     jsValueP = jsBoolP <|> jsNumberP <|> jsStringP <|> jsArrayP <|> jsObejectP
 
+    jsonP :: Parser JSValue
     jsonP = nofail $ total $ jsValueP 
 
 
