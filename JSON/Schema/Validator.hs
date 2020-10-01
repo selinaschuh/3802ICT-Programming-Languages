@@ -17,9 +17,21 @@ module JSON.Schema.Validator (
     valid :: Bool
     valid = True
 
+    -- checks if a given JSValue is JSTrue or JSFalse
+    isJSBool :: JSValue -> Bool
+    isJSBool v = case v of
+                    JSTrue -> True
+                    JSFalse -> True
+                    otherwise -> False
+
+    -- validates bool
+    boolV :: JSValue -> Bool
+    boolV json = if isJSBool json then valid else invalid
+
     validate :: JSValue -> JSValue -> Bool
-    validate (JSObject []) _ = valid -- empty schema matches anything
-    validate _ _ = invalid
+    validate _ (JSObject []) = valid -- empty schema matches anything
+    validate json (JSObject [JSMember "\"type\"" (JSString "\"bool\"")]) = boolV json
+    validate json _ = invalid
 
     parse :: String -> JSValue
     parse file = 
