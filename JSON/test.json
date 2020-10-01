@@ -1,0 +1,21 @@
+{
+    "name": {
+             "firstName": true,
+             "lastName": false
+           },
+           "billingAddr": {
+             "street": "5 Adelaide Ave",
+             "suburb": "Deakin",
+             "state": "ACT",
+             "postcode": 2600
+           },
+           "deliveryAddr": {
+             "street": "5 Adelaide Ave",
+             "suburb": "Deakin",
+             "state": "ACT",
+             "postcode": 2600
+    } 
+}
+
+
+  
