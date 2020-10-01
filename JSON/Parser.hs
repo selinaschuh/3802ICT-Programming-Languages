@@ -1,4 +1,4 @@
-module JSON where
+module JSON.Parser where
 
     import Data.List
     import Data.Char
@@ -128,13 +128,13 @@ module JSON where
 
         -- lex input to get lexemes 
         case inputL cps of
-            Error pos msg -> JSON.error pos msg
+            Error pos msg -> JSON.Parser.error pos msg
             OK(tlps, _) -> do
                 putStrLn $ "Lexemes: " ++ show tlps
 
                 -- parse lexemes
                 case jsonP tlps of 
-                    Error pos msg -> JSON.error pos msg
+                    Error pos msg -> JSON.Parser.error pos msg
                     OK(json, _) -> do
                         putStrLn $ "Result :" ++ show json
                  
