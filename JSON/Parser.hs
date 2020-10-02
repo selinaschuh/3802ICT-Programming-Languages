@@ -19,7 +19,7 @@ module JSON.Parser (
     type JsString = String
     type JsMemberName = String
 
-    data JSMember = JSMember JsMemberName JSValue deriving (Show)
+    data JSMember = JSMember JsMemberName JSValue deriving (Show, Eq)
 
     data JSValue 
         = JSNumber JsNumber
@@ -28,7 +28,7 @@ module JSON.Parser (
         | JSString JsString
         | JSArray [JSValue]
         | JSObject [JSMember]
-        deriving (Show)
+        deriving (Show, Eq)
 
     -- Helper Function
     isDigitNotZero :: Char -> Bool
