@@ -47,16 +47,32 @@ module JSON.Schema.Validator (
     stringV (JSString s) = valid
     stringV _ = invalid
 
-    -- validates array
+    -- validates array with no type specification
     arrayV :: JSValue -> Bool
     arrayV (JSArray _) = valid
     arrayV _ = invalid
 
+    -- validates array with type specifications
     arrayV' :: JSValue -> JSValue ->  Bool
-    arrayV' object (JSArray []) = valid
-    arrayV' object (JSArray (e:elems)) = validate e object && arrayV' object (JSArray elems)
+    arrayV' _ (JSArray []) = valid
+    arrayV' (JSObject []) _ = invalid
+    --arrayV' object (JSArray (e:elems)) = validate e object && arrayV' object (JSArray elems)
+    arrayV' (JSObject (m:members)) (JSArray (e:elems)) = (validate e (JSObject [m]) || arrayV' (JSObject members) (JSArray [e])) && arrayV' (JSObject (m:members)) (JSArray elems)
     arrayV' _ _ = invalid
 
+    objectV :: [JSMember] -> [JSMember] -> Bool
+    objectV [] [] = valid
+    objectV [] sm = invalid
+    objectV jm [] = invalid
+    objectV (jm:jms) (sm:sms) = memberV jm sm && objectV jms sms
+
+    -- validates a json member against a schema member specification
+    memberV :: JSMember -> JSMember -> Bool
+    memberV (JSMember jmName jmValue) (JSMember smName smValue) | jmName == smName      = validate jmValue smValue    -- if member name matches, validate the value
+                                                                | otherwise             = invalid                     -- member names don't match -> invalid
+
+
+    -- validate json schema -> valid/invalid
     validate :: JSValue -> JSValue -> Bool
     validate _ (JSObject []) = valid -- empty schema matches anything
     validate json (JSObject [JSMember "\"type\"" (JSString "\"bool\"")]) = boolV json
@@ -65,8 +81,8 @@ module JSON.Schema.Validator (
     validate json (JSObject [JSMember "\"type\"" (JSString "\"string\"")]) = stringV json
     validate json (JSObject [JSMember "\"type\"" (JSString "\"array\"")]) = arrayV json
     validate json (JSObject [JSMember "\"type\"" (JSString "\"array\""), JSMember "\"elements\"" object]) = arrayV' object json
+    validate (JSObject jMembers) (JSObject (JSMember "\"type\"" (JSString "\"object\"") : sMembers)) = objectV jMembers sMembers
     validate _ _ = invalid
-
 
     parse :: String -> JSValue
     parse file = 

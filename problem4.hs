@@ -24,10 +24,9 @@ module Main (main) where
         -- parse the json file to be validated
         let json = parse jsonIn
         let schema = parse schemaIn
-        putStrLn $ show json
-        putStrLn $ show schema
+        -- putStrLn $ show json
+        -- putStrLn $ show schema
 
         let isValid = validate json schema
         let result = if isValid then "Valid" else "Not Valid"
         putStrLn result
-        putStrLn $ show isValid
