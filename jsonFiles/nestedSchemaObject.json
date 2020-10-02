@@ -1,7 +1,7 @@
 {
     "name": {
-             "firstName": true,
-             "lastName": false
+             "firstName": "Scott",
+             "lastName": "Morrison"
            },
            "billingAddr": {
              "street": "5 Adelaide Ave",
@@ -16,6 +16,3 @@
              "postcode": 2600
     } 
 }
-
-
-  

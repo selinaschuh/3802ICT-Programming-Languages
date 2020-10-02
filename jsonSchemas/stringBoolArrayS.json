@@ -1,0 +1,4 @@
+{
+    "type": "array",
+    "elements": {"type": "string", "type":"bool"}
+}
