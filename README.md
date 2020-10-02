@@ -1,7 +1,7 @@
 # 3802ICT-Programming-Languages
 Assignment of 3802ICT Programming Languages @ Griffith University
 
-### JSON Lexer, Parser and Validator
+### JSON Lexer, Parser and Validator in Haskell
 #### The module JSON.Parser includes functions to parse a .json file using the ABR module
 #### The module JSON.Schema.Validator checks a JSON data document against a JSON schema document to see if the data document matches the schema specifications
 
