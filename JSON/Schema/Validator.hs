@@ -1,5 +1,5 @@
 module JSON.Schema.Validator (
-    valid, invalid, parse, validate
+    valid, invalid, parse, validate, checker
 
 ) where
 
@@ -71,6 +71,19 @@ module JSON.Schema.Validator (
     memberV (JSMember jmName jmValue) (JSMember smName smValue) | jmName == smName      = validate jmValue smValue    -- if member name matches, validate the value
                                                                 | otherwise             = invalid                     -- member names don't match -> invalid
 
+    -- thiw one works and returns true if the schema has nested schemas
+    checkSchema :: [JSMember] -> Bool
+    checkSchema [] = invalid
+    checkSchema (JSMember "\"schemas\"" schema : members) = valid
+    checkSchema (m:members) = checkSchema members 
+
+    -- this one works and gets a list of members which are the schemas, in order for it to work we need tocall checkSchema first to make sure there is a nested schema to extract schemas from
+    getSchema :: [JSMember] -> [JSMember]
+    getSchema ((JSMember "\"schemas\"" (JSObject members)):_) = members
+    getSchema ((JSMember name value):members) = getSchema members
+    getSchema [] = []
+
+    -- now that schemas are in a list, need to find the one with the right name and call validate with what comes after it
 
     -- validate json schema -> valid/invalid
     validate :: JSValue -> JSValue -> Bool
@@ -81,8 +94,31 @@ module JSON.Schema.Validator (
     validate json (JSObject [JSMember "\"type\"" (JSString "\"string\"")]) = stringV json
     validate json (JSObject [JSMember "\"type\"" (JSString "\"array\"")]) = arrayV json
     validate json (JSObject [JSMember "\"type\"" (JSString "\"array\""), JSMember "\"elements\"" object]) = arrayV' object json
-    validate (JSObject jMembers) (JSObject (JSMember "\"type\"" (JSString "\"object\"") : sMembers)) = objectV jMembers sMembers
+    validate (JSObject jMembers) (JSObject (JSMember "\"type\"" (JSString "\"object\"") : sMembers)) = objectV jMembers sMembers || (if (checkSchema sMembers) then (objectV' jMembers sMembers (getSchema sMembers)) else invalid)
     validate _ _ = invalid
+
+
+    objectV' [] [] _ = valid
+    objectV' [] ((JSMember "\"schemas\"" smValue):_) _ = valid
+    objectV' [] sm _ = invalid
+    objectV' jm [] _ = invalid
+    objectV' (jm:jms) (sm:sms) schemas = memberV' jm sm schemas && objectV' jms sms schemas
+
+    -- validates a json member against a schema member specification
+
+    memberV' (JSMember jmName jmValue) (JSMember smName smValue) schemas | jmName == smName      = validate' jmValue smValue schemas    -- if member name matches, validate the value
+                                                                         | otherwise             = invalid     
+
+
+    -- called by memberV 
+    validate' json (JSObject [JSMember "\"type\"" (JSString customSchemaName)]) schemas = validate json (findRightSchema customSchemaName schemas)
+
+    
+    findRightSchema name ((JSMember name' value):schemas) | name == name'    = value
+                                                          | otherwise        = findRightSchema name schemas
+
+
+    checker (JSObject (JSMember "\"type\"" (JSString "\"object\"") : sMembers)) = getSchema sMembers
 
     parse :: String -> JSValue
     parse file = 
