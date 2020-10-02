@@ -28,5 +28,4 @@ module Main (main) where
         -- putStrLn $ show schema
 
         let isValid = validate json schema
-        let result = if isValid then "Valid" else "Not Valid"
-        putStrLn result
+        putStrLn $ "Valid: " ++ show isValid
